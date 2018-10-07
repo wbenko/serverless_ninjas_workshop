@@ -103,7 +103,7 @@ Now that we have an event hub let's create an instance of CosmosDB where we can 
 
     ![Create](images/create.png "Create")
 
-1. On the next screen select a unique name for your function app (confirm with checkmark), again let's use the same existing Resource Group as our Event Hub just to keep everything organized, keep consumption plan selected for the hosting plan, and make sure you choose "On" for Application Insights and then click "Create"
+1. On the next screen select a unique name for your function app (confirm with checkmark), again let's use the same existing Resource Group as our Event Hub just to keep everything organized, keep consumption plan selected for the hosting plan, and make sure you choose "On" for Application Insights, make sure you select Javascript for the Runtime stack and then click "Create"
 
     ![Create Cosmos DB](images/create_function.png "Create Cosmos DB")
 
@@ -115,33 +115,28 @@ Now that we have an event hub let's create an instance of CosmosDB where we can 
 
     ![New Function](images/new_function.png "New Function")
 
-1. Then click the link that says create your own custom function
+1. Then click the link that says in portal
 
     ![Create Custom Function](images/create_custom_function.png "Create Custom Function")
 
-1. Type Event Hub in the search box then click the "JavaScript" language option for the "Event Hub trigger" template
+1. Select the WebHook + API function and create
 
     ![Choose Function Template](images/choose_function_template.png)
 
-1. Click new for the Event Hub connection
+1. Now let's set this up to be triggered by the Event hub instead of HTTP request.  Click on integrate for your new function
 
     ![New Event Hub connection](images/new_event_hub_connection.png "New Event Hub connection")
 
-1. Select the Event Hub you set up in the previous step and "RootManageSharedAccessKey" for the policy. Then click Select
-
+1. Now delete the HTTP trigger.  We will be replacing it with a event hub trigger
     ![Select Event Hub connection](images/select_event_hub_connection.png "Select Event Hub connection")
 
-1. Now enter the name of the Event Hub in the Event Hub Name field and then click Create
+1. Now click on NewTrigger, select Azure Event Hubs, and click Select.  If you are prompted to Install the Microsoft.Azure.WebJobs.Extensions.EventHubs click on install
 
     ![Finish New Function](images/finish_function_settings.png "Finish New Function")
 
-1. Click the integrate link for your function
+1. Now we need to connect to are existing event hub.  Click on new next to the event hub connection and select your event hub.  Then update the event hub paremeter name and the event hub name. Save
 
     ![Integrate Function](images/integrate_function.png "Integrate Function")
-
-1. Update the parameter name and click save.
-
-    ![Parameter name](images/integrate_function_parameter_name.png "Parameter name")
 
 1. Click the "New Output" button
 
@@ -212,19 +207,48 @@ Now that we have an event hub let's create an instance of CosmosDB where we can 
 
     ![app insights live stream](images/app_insights_live_stream.png "app insights live stream")
 
-1. In another new window go to [https://aka.ms/eventgen](https://aka.ms/eventgen) in a web browser
+1. In another new window go back to your function app.  we are going to create a function that will input data into are event hub every 5 seconds
 
-1. Select Event Hub as the messaging service
+1. Create a new function by clicking on the plus sign next to the functions section on the left
 
-    ![eventgen event hub](images/eventgen_eventhub.png "eventgen event hub")
+    ![New Function](images/new_function.png "New Function")
 
-1. Paste in the connection string and event hub name you saved earlier
+1. Select Timer Trigger for are template.
 
-    ![eventgen event hub settings](images/eventgen_eventhub_settings.png "eventgen event hub settings")
+    ![Select Timer Trigger](images/Select_Timer_Trigger.png "Select Timer Trigger")
 
-1. Choose Ninja Battle, set the duration to 1 minute, set the frequency to whatever you'd like, and click start!
+1. Update the Name and set the CRON Schedule to be */5 * * * * *
 
-    ![eventgen messages](images/eventgen_messages.png "eventgen messages")
+    ![Cron UPdate](images/Cron_Update.png "Cron Update")
+
+1. Now select integrate on you new function.  We are going to configure a new output for are event hub so select new output 
+ 
+    ![New Output](images/new_function_output.png "New Output")
+
+1. Select a Azure Event Hubs and click select.
+
+1. CLick on new next to your Event Hub connection and select the event hub you created. then update your event hub name. Then Save
+
+    ![Event Hub Out](images/event_Hub_Out.png "Event Hub Out")
+
+1. Now select the new function and update the code to the following. and Save and run.
+
+    ![Timer Code Update](images/Timer_Code_Update.png "Timer Code Update")
+
+    ```javascript
+    module.exports = async function (context, myTimer) {
+        var timeStamp = new Date().toISOString();
+    
+        context.bindings.outEventHubMessages = "Test";
+        context.done()
+
+        if(myTimer.isPastDue)
+        {
+            context.log('JavaScript is running late!');
+        }
+        context.log('JavaScript timer trigger function ran!', timeStamp);   
+    };
+    ```
 
 1. Now let's watch the live streaming in Application Insights
 
